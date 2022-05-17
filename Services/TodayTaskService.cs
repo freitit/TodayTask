@@ -16,6 +16,7 @@ namespace TodayTask.Services
     {
         private readonly VssConnection _connection;
 
+        private const string WORK_DAY_FINISH_AT = "18:00";
         private const string WORK_ITEMS_QUERY_STRING = 
             "SELECT [Id] " +
             "FROM WorkItems " +
@@ -38,16 +39,16 @@ namespace TodayTask.Services
             _connection = new(new Uri(setting.OrganizationUrl), new VssBasicCredential(setting.Username, setting.PersonalAccessToken));
         }
 
-        public async Task<IEnumerable<WorkItemViewModel>> GetTodayTasks(string user, DateTime? dateTime)
+        public async Task<IEnumerable<WorkItemViewModel>> GetTodayTasks(string user, DateTime? queryDate)
         {
             user = !string.IsNullOrEmpty(user) ? $"'{user}'" : "@Me";
 
-            if (!dateTime.HasValue)
+            if (!queryDate.HasValue)
             {
-                dateTime = DateTime.Now;
+                queryDate = DateTime.Now;
             }
 
-            var workItems = await GetWorkItems(user, $"{dateTime.Value:yyyy-MM-dd}", "17:30");
+            var workItems = await GetWorkItems(user, $"{queryDate.Value:yyyy-MM-dd}", WORK_DAY_FINISH_AT);
 
             return workItems != null && workItems.Any() ?
                 workItems.Select(workItem => new WorkItemViewModel(workItem)) :
